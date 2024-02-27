@@ -1,0 +1,44 @@
+/*data step - reads and process input data and creating a table / filter rows/ compute new columns/ join tables/ data manipulations 
+proc step - processing a sas table (reports/graphs, managing data, statictical analysis)
+global statements (title; options; libname;) can be outside of data/proc steps, option/setting of sas session, without run; */
+*ctrl + / comment;
+
+*create a new SAS data set;
+data myclass;
+	set sashelp.class;
+run;
+
+*print table;
+proc print data=myclass;
+run;
+
+/* data
+  -structured: defined rows and columns (name, type, lenght)
+  -unstructured: no defined columns (txt, delimited, json); must be imported first */
+*table propetries;
+proc contents data="/home/u63789049/EPG1V2/data/storm_summary.sas7bdat";
+run;
+
+*create a library (active for the sas session)
+
+libname libref engine "path";
+/*  libref - chosen name <8char, engine (base, xlsx)
+    acces by data=libref.tablename
+    work lib - automatic default temporaty lib */
+
+*modify column name into a valid format
+options validvarname = v7;
+
+*delete library (not files);
+libname libref clear;
+
+* example;
+libname xlstorm xlsx "/home/u63789049/EPG1V2/data/storm.xlsx";
+
+options validvarname=v7;
+
+proc print data=xlstorm.storm_summary;
+run;
+
+libname xlstorm clear;
+
