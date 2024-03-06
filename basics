@@ -1,44 +1,65 @@
 /*data step - reads and process input data and creating a table / filter rows/ compute new columns/ join tables/ data manipulations 
 proc step - processing a sas table (reports/graphs, managing data, statictical analysis)
-global statements (title; options; libname;) can be outside of data/proc steps, option/setting of sas session, without run; */
-*ctrl + / comment;
+global statements (title; options; libname;) can be outside of data/proc steps, option/setting of sas session, without run; 
+data
+  -structured: defined rows and columns (name, type, lenght)
+  -unstructured: no defined columns (txt, delimited, json); must be imported first*/
 
 *create a new SAS data set;
-data myclass;
-	set sashelp.class;
-run;
-
-*print table;
-proc print data=myclass;
-run;
-
-/* data
-  -structured: defined rows and columns (name, type, lenght)
-  -unstructured: no defined columns (txt, delimited, json); must be imported first */
-*table propetries;
-proc contents data="/home/u63789049/EPG1V2/data/storm_summary.sas7bdat";
-run;
+	data myclass;
+		set sashelp.class;
+	run;
 
 *create a library (active for the sas session)
 
-libname libref engine "path";
-/*  libref - chosen name <8char, engine (base, xlsx)
-    acces by data=libref.tablename
-    work lib - automatic default temporaty lib */
+	libname libref engine "path";
+	/*  libref - chosen name < 8char, engine - base, xlsx
+	    acces by data=libref.tablename
+	    work lib - automatic default temporaty lib */
 
 *modify column name into a valid format
-options validvarname = v7;
+	options validvarname = v7;
 
 *delete library (not files);
-libname libref clear;
+	libname libref clear;
+	
+			* example;
+			libname xlstorm xlsx "/home/u63789049/EPG1V2/data/storm.xlsx";
+			options validvarname=v7;
+			proc print data=xlstorm.storm_summary;
+			run;
+			libname xlstorm clear;
 
-* example;
-libname xlstorm xlsx "/home/u63789049/EPG1V2/data/storm.xlsx";
+*importing unstructured data;
 
-options validvarname=v7;
+	proc 	import 	datafile="filepath" 
+			dbms=filetype 
+			out=output-table
+			replace; *creates a copy of a file;
+		guessingrows=max;
+	run;
+			*example;
+			proc import	datafile="/home/u63789049/EPG1V2/data/np_traffic.dat" 
+					dbms=dlm 
+					out=traffic2 
+					replace;
+				delimiter="|";
+				guessingrows=max;
+			run;
+*modifying data proc + means/univariate/freq
 
-proc print data=xlstorm.storm_summary;
-run;
+	proc print data=pg1.storm_summary (obs=10); *list 1st 10 rows;
+		var Season Name Basin MinPressure MaxWindMPH StartDate EndDate; *list chosen columns;
+	run;
 
-libname xlstorm clear;
+	proc means data=pg1.storm_summary;
+		var MinPressure MaxWindMPH; *columns to be analysed, must be numeric;
+	run;
 
+	proc univariate data=pg1.storm_summary; 
+		var MinPressure MaxWindMPH; 
+	run;
+
+	proc FREQ data=pg1.storm_summary;
+		TABLEs basin type season;
+	run;
